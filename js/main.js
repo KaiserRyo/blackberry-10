@@ -14,14 +14,12 @@ var emailTextField = document.getElementById('email'),
 	signUpButton = document.getElementById('sign-up'),
 
 	enableSignUpButton = function () {
-		console.log('enable');
-		signUpButton.disabled = 'false';
+		signUpButton.disabled = false;
 		signUpButton.style.color = 'red';
 	},
 
 	disableSignUpButton = function () {
-		console.log('disable');
-		signUpButton.disabled = 'true';
+		signUpButton.disabled = true;
 		signUpButton.style.color = 'darkgray';
 	};
 
@@ -37,6 +35,5 @@ emailTextField.addEventListener('keydown', function (event) {
 });
 
 emailTextField.addEventListener('blur', function (event) {
-	console.log('blur');
 	window.scrollTo(0, 1);
 });

@@ -47,14 +47,14 @@ func createSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := datastore.Put(c, datastore.NewIncompleteKey(c, "SignUp", nil), &signUp); err != nil {
-		fmt.Fprintf(w, "error: %v", err)
+		c.Infof("error: %v", err)
 		return
 	}
 }
 
 func createSignUpAsync(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	t := taskqueue.NewPOSTTask("/"+v.Get(":id")+"/clicks", map[string][]string{
+	t := taskqueue.NewPOSTTask("/signups/task", map[string][]string{
+		"email_addr":  {r.FormValue("email_addr")},
 		"remote_addr": {r.RemoteAddr},
 		"user_agent":  {r.UserAgent()},
 		"timestamp":   {fmt.Sprintf("%v", time.Now().Unix())},
@@ -64,6 +64,8 @@ func createSignUpAsync(c appengine.Context, w http.ResponseWriter, r *http.Reque
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	http.Redirect(w, r, "/", 302)
 }
 
 func indexSignUps(c appengine.Context, w http.ResponseWriter, r *http.Request) {
@@ -132,6 +134,7 @@ func newSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 func init() {
 	m := pat.New()
 	m.Post("/signups", appstats.NewHandler(createSignUpAsync))
+	m.Post("/signups/task", appstats.NewHandler(createSignUp))
 	m.Get("/signups", appstats.NewHandler(indexSignUps))
 	m.Get("/", appstats.NewHandler(newSignUp))
 	http.Handle("/", m)

@@ -31,8 +31,11 @@
         <img id="trade-up" src="/img/trade-up.png"/>
 
         <div id="form-container">
+            {{ if . }}
+                {{ . }}
+            {{ end }}
             <form method="POST" action="/signups">
-                <input id="email" placeholder="Type your email" type="text" name="email"><br>
+                <input id="email" placeholder="Type your email" type="text" name="email_addr"><br>
                 <button id="sign-up" disabled="true">Sign Up</button>
             </form>
         </div>
