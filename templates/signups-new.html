@@ -24,20 +24,24 @@
 
         <!-- Add your site or application content here -->
 
-        <img id="background" src="/img/background.jpg"/>
-        <img id="alt-gegen-neu" src="/img/alt-gegen-neu.png"/>
-        <img id="phones" src="/img/phones.png"/>
-        <img id="logo" src="/img/logo.png"/>
-        <img id="trade-up" src="/img/trade-up.png"/>
+        <div id="container">
+            <img id="background" src="/img/background.jpg"/>
+            <img id="alt-gegen-neu" src="/img/alt-gegen-neu.png"/>
+            <img id="phones" src="/img/phones.png"/>
+            <img id="logo" src="/img/logo.png"/>
+            <img id="trade-up" src="/img/trade-up.png"/>
 
-        <div id="form-container">
-            {{ if . }}
-                {{ . }}
-            {{ end }}
-            <form method="POST" action="/signups">
-                <input id="email" placeholder="Type your email" type="text" name="email_addr"><br>
-                <button id="sign-up" disabled="true">Sign Up</button>
-            </form>
+            <div id="form-container">
+                {{ if . }}
+                    {{ . }}
+                {{ end }}
+                <form method="POST" action="/signups">
+                    <input class="input" id="first-name" placeholder="Vorname" type="text" name="first_name"><br>
+                    <input class="input" id="last-name" placeholder="Nachname" type="text" name="last_name"><br>
+                    <input class="input" id="email" placeholder="Email" type="text" name="email_addr"><br>
+                    <button id="sign-up" disabled="true">Sign Up</button>
+                </form>
+            </div>
         </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>

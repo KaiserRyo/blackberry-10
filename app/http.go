@@ -3,8 +3,11 @@ package blackberry
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/mail"
 	"appengine/taskqueue"
 	"appengine/user"
+	"bytes"
+	"encoding/csv"
 	"fmt"
 	"github.com/bmizerany/pat"
 	"github.com/mjibson/appstats"
@@ -41,6 +44,8 @@ func createSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	sec, _ := strconv.ParseInt(r.FormValue("timestamp"), 10, 64)
 	signUp := SignUp{
 		EmailAddr:  r.FormValue("email_addr"),
+		FirstName:  r.FormValue("first_name"),
+		LastName:   r.FormValue("last_name"),
 		RemoteAddr: r.FormValue("remote_addr"),
 		UserAgent:  r.FormValue("user_agent"),
 		Date:       time.Unix(sec, 0),
@@ -55,6 +60,8 @@ func createSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 func createSignUpAsync(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	t := taskqueue.NewPOSTTask("/signups/task", map[string][]string{
 		"email_addr":  {r.FormValue("email_addr")},
+		"first_name":  {r.FormValue("first_name")},
+		"last_name":   {r.FormValue("last_name")},
 		"remote_addr": {r.RemoteAddr},
 		"user_agent":  {r.UserAgent()},
 		"timestamp":   {fmt.Sprintf("%v", time.Now().Unix())},
@@ -68,66 +75,48 @@ func createSignUpAsync(c appengine.Context, w http.ResponseWriter, r *http.Reque
 	http.Redirect(w, r, "/", 302)
 }
 
-func indexSignUps(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	q := datastore.NewQuery("SignUp").Order("-Date")
-
-	markers := make([]datastore.Cursor, 0, signUpsPerPage)
-	markerQuery := q.KeysOnly()
-	i := 0
-	for t := markerQuery.Run(c); ; {
-		c.Infof("-- %v", i)
-		if i%signUpsPerPage == 0 {
-			cursor, err := t.Cursor()
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			markers = append(markers, cursor)
-		}
-		i++
-
-		_, err := t.Next(nil)
-		if err == datastore.Done {
-			break
-		}
+func newSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	if err := templates.ExecuteTemplate(w, "signups-new.html", nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
 
-	c.Infof("\n\n\nMarkers %v", &markers)
-
-	d, _ := newTemplateData(c)
-
-	p := SignUpPage{
-		Markers: markers,
-	}
-
-	if values.Get("page") != "" {
-		p.Current, _ = strconv.Atoi(values.Get("page"))
-		q = q.Start(markers[p.Current-1])
-	} else {
-		p.Current = 1
-	}
+func sendEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	buffer := new(bytes.Buffer)
+	writer := csv.NewWriter(buffer)
 
 	signups := make([]SignUp, 0, signUpsPerPage)
-	q = q.Limit(signUpsPerPage)
+	q := datastore.NewQuery("SignUp").Order("-Date")
 	_, err := q.GetAll(c, &signups)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	p.SignUps = signups
 
-	d.Data = p
-	c.Infof("%v = %v", values.Get("page"), p.Current)
-
-	if err := templates.ExecuteTemplate(w, "signups-index.html", d); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	lines := make([][]string, 0, 10)
+	for _, v := range signups {
+		lines = append(lines, []string{v.FirstName, v.LastName, v.EmailAddr, v.Date.String(), v.RemoteAddr, v.UserAgent})
 	}
-}
 
-func newSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	if err := templates.ExecuteTemplate(w, "signups-new.html", nil); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := writer.WriteAll(lines); err != nil {
+		c.Errorf("Couldn't write CSV: %v", err)
+	}
+
+	att := mail.Attachment{
+		Name: "all.csv",
+		Data: buffer.Bytes(),
+	}
+
+	msg := &mail.Message{
+		Sender:      "Quico Moya <guingu@gmail.com>",
+		To:          []string{"me@qmoya.com"},
+		Bcc:         []string{"yasemin.kaya@yoc.com"},
+		Subject:     "Blackberry 10 Campaign Report",
+		Body:        fmt.Sprintf("Dear xxx,\nPlease see the attached report.\n Sincerely, Quico Moya"),
+		Attachments: []mail.Attachment{att},
+	}
+	if err := mail.Send(c, msg); err != nil {
+		c.Errorf("Couldn't send email: %v", err)
 	}
 }
 
@@ -135,7 +124,7 @@ func init() {
 	m := pat.New()
 	m.Post("/signups", appstats.NewHandler(createSignUpAsync))
 	m.Post("/signups/task", appstats.NewHandler(createSignUp))
-	m.Get("/signups", appstats.NewHandler(indexSignUps))
+	m.Get("/sendemail", appstats.NewHandler(sendEmail))
 	m.Get("/", appstats.NewHandler(newSignUp))
 	http.Handle("/", m)
 }

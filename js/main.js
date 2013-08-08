@@ -7,6 +7,8 @@ document.addEventListener('touchmove', function () {
 });
 
 var emailTextField = document.getElementById('email'),
+	firstNameTextField = document.getElementById('first-name'),
+	lastNameTextField = document.getElementById('last-name'),
 	emailIsValid = function (email) { 
 	    var re = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
 	    return re.test(email);

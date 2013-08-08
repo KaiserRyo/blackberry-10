@@ -9,6 +9,8 @@ import (
 
 type SignUp struct {
 	EmailAddr  string
+	FirstName  string
+	LastName   string
 	RemoteAddr string
 	UserAgent  string
 	Date       time.Time
