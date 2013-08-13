@@ -5,10 +5,10 @@ setTimeout(function () {
     window.scrollTo(0, 1);
 }, 1000);
 
-document.addEventListener('touchmove', function () {
-    'use strict';
-    event.preventDefault();
-});
+// document.addEventListener('touchmove', function () {
+//     'use strict';
+//     event.preventDefault();
+// });
 
 var emailTextField = document.getElementById('email'),
     firstNameTextField = document.getElementById('first-name'),
