@@ -30,11 +30,13 @@
             <img id="phones" src="/img/phones.png"/>
             <img id="logo" src="/img/logo.png"/>
             <img id="trade-up" src="/img/trade-up.png"/>
+            {{ if . }}
+                <div id="message">
+                {{ . }}
+                </div>
+            {{ end }}
 
             <div id="form-container">
-                {{ if . }}
-                    {{ . }}
-                {{ end }}
                 <form method="POST" action="/signups">
                     <input class="input" id="first-name" placeholder="Vorname" type="text" name="first_name"><br>
                     <input class="input" id="last-name" placeholder="Nachname" type="text" name="last_name"><br>
@@ -47,6 +49,15 @@
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
         <script src="js/plugins.js"></script>
         <script src="js/main.js"></script>
+        <script>
+            Modernizr.load({
+                test: Modernizr.input.placeholder,
+                nope: [
+                        '/css/placeholder_polyfill.css',
+                        '/js/placeholder_polyfill.jquery.js', // this and the css above are the only required files
+                      ]
+            });
+        </script>
 
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>

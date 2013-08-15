@@ -13,6 +13,7 @@ import (
 	"github.com/mjibson/appstats"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -72,11 +73,16 @@ func createSignUpAsync(c appengine.Context, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	http.Redirect(w, r, "/", 302)
+	v := url.Values{}
+	v.Set("message", "Vielen Dank für Ihre Anfrage. Wir werden uns in Kürze mit Ihnen in Verbindung setzen.")
+
+	http.Redirect(w, r, "/?"+v.Encode(), 302)
 }
 
 func newSignUp(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-	if err := templates.ExecuteTemplate(w, "signups-new.html", nil); err != nil {
+	v := r.URL.Query()
+	message := v.Get("message")
+	if err := templates.ExecuteTemplate(w, "signups-new.html", message); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -108,11 +114,11 @@ func sendEmail(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := &mail.Message{
-		Sender:      "Quico Moya <guingu@gmail.com>",
-		To:          []string{"me@qmoya.com"},
+		Sender:      "Quico Moya <quico.moya@yoc.com>",
+		To:          []string{"de.blackberry@erseurope.com"},
 		Bcc:         []string{"yasemin.kaya@yoc.com"},
 		Subject:     "Blackberry 10 Campaign Report",
-		Body:        fmt.Sprintf("Dear xxx,\nPlease see the attached report.\n Sincerely, Quico Moya"),
+		Body:        fmt.Sprintf(""),
 		Attachments: []mail.Attachment{att},
 	}
 	if err := mail.Send(c, msg); err != nil {
